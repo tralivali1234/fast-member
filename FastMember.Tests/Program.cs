@@ -10,6 +10,7 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Exporters;
+using BenchmarkDotNet.Exporters.Csv;
 
 namespace FastMemberTests
 {
@@ -34,21 +35,14 @@ namespace FastMemberTests
                 var summary = BenchmarkRunner.Run<FastMemberPerformance>(new Config());
                 Console.WriteLine();
 				// Display a summary to match the output of the original Performance test
-#if COREFX
-				foreach (var report in summary.Reports.OrderBy(r => r.Benchmark.Target.MethodTitle))
+				foreach (var report in summary.Reports.OrderBy(r => r.Benchmark.Target.MethodDisplayInfo))
 				{
-					Console.WriteLine("{0}: {1:N2} ns", report.Benchmark.Target.MethodTitle, report.ResultStatistics.Median);
+					Console.WriteLine("{0}: {1:N2} ns", report.Benchmark.Target.MethodDisplayInfo, report.ResultStatistics.Median);
 				}
-#else
-				foreach (var report in summary.Reports.OrderBy(r => r.Value.Benchmark.Target.MethodTitle))
-                {
-                    Console.WriteLine("{0}: {1:N2} ns", report.Value.Benchmark.Target.MethodTitle, report.Value.ResultStatistics.Median);
-                }
-#endif
 				Console.WriteLine();
             }
 
-            [Setup]
+            [GlobalSetup]
             public void Setup()
             {
                 obj = new FastMemberPerformance();
@@ -130,7 +124,6 @@ namespace FastMemberTests
             public Config()
             {
                 Add(Job.Default.WithLaunchCount(1));
-                Add(PropertyColumn.Method);
                 Add(StatisticColumn.Median, StatisticColumn.StdDev);
                 Add(CsvExporter.Default, MarkdownExporter.Default, MarkdownExporter.GitHub);
                 Add(new ConsoleLogger());
